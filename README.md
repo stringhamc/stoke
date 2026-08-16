@@ -65,6 +65,13 @@ on your phone, and use **Add to Home Screen** (iOS Safari share menu, or
 Android Chrome's install prompt). You get a home-screen icon, full-screen
 launch, and offline support via a service worker.
 
+A GitHub Actions workflow (`.github/workflows/deploy-pages.yml`) builds and
+deploys to GitHub Pages on every push to `main`. One-time setup: in the repo's
+**Settings → Pages**, set **Source** to **GitHub Actions**. The app then lives
+at `https://<user>.github.io/<repo>/`. Note that GitHub Pages sites are
+publicly reachable (workout data still never leaves the device — the app has
+no backend).
+
 For zero-setup desktop testing there's also `stoke-standalone.html` — the whole
 app in one file; download and double-click it (regenerate with
 `npm run build:standalone`).
