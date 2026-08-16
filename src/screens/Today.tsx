@@ -3,6 +3,7 @@ import { FlagSheet } from '../components/FlagSheet'
 import { getExercise } from '../data/exercises'
 import { FORMAT_INFO, swapOptions } from '../engine/generator'
 import { adherenceRatio, currentStreakDays } from '../engine/progression'
+import { repNote } from '../engine/reps'
 import { STATUS_INFO, trainingStatus } from '../engine/status'
 import { FOCUS_LABELS, useStore } from '../state/store'
 import type { Workout, WorkoutFormat } from '../types'
@@ -115,8 +116,11 @@ export function Today({ onStart }: { onStart: () => void }) {
                   </strong>
                   <span className="muted">
                     {g.targetReps !== undefined
-                      ? `${g.targetReps} reps per round`
-                      : `${g.workSeconds}s work · ${g.restSeconds}s rest`}
+                      ? `${repNote(ex, g.targetReps)} per round`
+                      : `${g.workSeconds}s work · ${g.restSeconds}s rest${
+                          ex.repStyle === 'alternating' ? ' · alternate sides'
+                          : ex.repStyle === 'per_side' ? ' · switch halfway' : ''
+                        }`}
                     {g.swapped ? ' · swapped' : ''}
                   </span>
                 </div>

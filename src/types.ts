@@ -8,6 +8,16 @@ export type ExerciseKind = 'strength' | 'cardio' | 'core' | 'mobility'
 
 export type JointArea = 'knees' | 'shoulders' | 'wrists' | 'lower_back' | 'ankles' | 'tailbone' | 'neck'
 
+/**
+ * How reps count for this exercise:
+ * - standard:    one motion = one rep
+ * - alternating: sides alternate continuously; EACH side counts as one rep
+ *                (12 lunges = 6 per leg)
+ * - per_side:    work one side at a time; timed intervals switch halfway,
+ *                rep targets mean that many ON EACH side
+ */
+export type RepStyle = 'standard' | 'alternating' | 'per_side'
+
 export interface Exercise {
   id: string
   name: string
@@ -21,6 +31,9 @@ export interface Exercise {
   /** joints under notable load, used for injury-prevention filtering */
   jointLoad: JointArea[]
   equipment: Equipment[]
+  /** movement-pattern animation shown in the player */
+  anim: import('./data/anims').AnimId
+  repStyle: RepStyle
 }
 
 export type ExerciseFlagReason = 'painful' | 'too_hard'
@@ -48,6 +61,8 @@ export interface UserProfile {
   excluded: string[]
   /** exercises the user marked as painful or too difficult */
   flags: ExerciseFlag[]
+  soundEffects: boolean
+  voiceCues: boolean
   onboarded: boolean
 }
 

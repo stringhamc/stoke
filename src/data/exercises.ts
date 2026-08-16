@@ -1,6 +1,7 @@
-import type { Exercise } from '../types'
+import type { Exercise, RepStyle } from '../types'
+import type { AnimId } from './anims'
 
-export const EXERCISES: Exercise[] = [
+const BASE: Omit<Exercise, 'anim' | 'repStyle'>[] = [
   // ——— Cardio ———
   {
     id: 'jumping_jacks',
@@ -494,6 +495,95 @@ export const EXERCISES: Exercise[] = [
     difficulty: 1, impact: 'low', jointLoad: [], equipment: ['none'],
   },
 ]
+
+/**
+ * Movement-pattern animation + rep-counting style for every exercise.
+ * repStyle semantics: 'alternating' = sides alternate and EACH side counts as
+ * one rep (12 lunges = 6 per leg); 'per_side' = one side at a time — timed
+ * intervals switch halfway, rep targets mean that many on each side.
+ */
+const FORM: Record<string, [AnimId, RepStyle]> = {
+  // cardio
+  jumping_jacks: ['jack', 'standard'],
+  step_jacks: ['jack', 'alternating'],
+  seal_jacks: ['jack', 'standard'],
+  high_knees: ['run', 'alternating'],
+  march_in_place: ['run', 'alternating'],
+  butt_kicks: ['buttkick', 'alternating'],
+  skaters: ['skater', 'alternating'],
+  lateral_steps: ['skater', 'alternating'],
+  burpees: ['burpee', 'standard'],
+  half_burpees: ['burpee', 'standard'],
+  mountain_climbers: ['climber', 'alternating'],
+  slow_climbers: ['climber', 'alternating'],
+  plank_jacks: ['climber', 'standard'],
+  squat_jumps: ['squat', 'standard'],
+  tuck_jumps: ['squat', 'standard'],
+  sprinter_lunges: ['lunge', 'per_side'],
+  inchworms: ['burpee', 'standard'],
+  jab_cross: ['punch', 'alternating'],
+  // lower body
+  bodyweight_squat: ['squat', 'standard'],
+  chair_sit_stand: ['squat', 'standard'],
+  goblet_squat: ['squat', 'standard'],
+  sumo_squat: ['squat', 'standard'],
+  reverse_lunge: ['lunge', 'alternating'],
+  forward_lunge: ['lunge', 'alternating'],
+  split_squat: ['lunge', 'per_side'],
+  side_lunges: ['sidelunge', 'alternating'],
+  step_ups: ['stepup', 'alternating'],
+  wall_sit: ['wallsit', 'standard'],
+  glute_bridge: ['bridge', 'standard'],
+  single_leg_bridge: ['bridge', 'per_side'],
+  calf_raises: ['calfraise', 'standard'],
+  rdl_dumbbell: ['hinge', 'standard'],
+  good_mornings: ['hinge', 'standard'],
+  donkey_kicks: ['birddog', 'per_side'],
+  fire_hydrants: ['birddog', 'per_side'],
+  // upper body
+  pushups: ['pushup', 'standard'],
+  knee_pushups: ['pushup', 'standard'],
+  wall_pushups: ['pushup', 'standard'],
+  pike_pushups: ['pushup', 'standard'],
+  tricep_dips: ['dip', 'standard'],
+  db_row: ['row', 'standard'],
+  band_row: ['row', 'standard'],
+  prone_ytw: ['superman', 'standard'],
+  db_press: ['press', 'standard'],
+  db_curl: ['press', 'standard'],
+  band_pull_apart: ['press', 'standard'],
+  arm_circles: ['press', 'standard'],
+  // core
+  plank: ['plank', 'standard'],
+  knee_plank: ['plank', 'standard'],
+  bear_hold: ['plank', 'standard'],
+  side_plank: ['sideplank', 'per_side'],
+  plank_shoulder_taps: ['climber', 'alternating'],
+  crunches: ['crunch', 'standard'],
+  dead_bug: ['deadbug', 'alternating'],
+  bird_dog: ['birddog', 'alternating'],
+  bicycle_crunch: ['crunch', 'alternating'],
+  leg_raises: ['legraise', 'standard'],
+  russian_twist: ['twist', 'alternating'],
+  boat_hold: ['legraise', 'standard'],
+  flutter_kicks: ['flutter', 'alternating'],
+  reverse_crunch: ['crunch', 'standard'],
+  hollow_hold: ['legraise', 'standard'],
+  superman: ['superman', 'standard'],
+  // mobility
+  cat_cow: ['catcow', 'standard'],
+  worlds_greatest: ['lunge', 'alternating'],
+  hip_circles: ['mobility', 'standard'],
+  thoracic_rotation: ['birddog', 'alternating'],
+  downdog_calf: ['hinge', 'alternating'],
+  standing_hamstring: ['hinge', 'alternating'],
+}
+
+export const EXERCISES: Exercise[] = BASE.map((e) => {
+  const form = FORM[e.id]
+  if (!form) throw new Error(`Missing form mapping for exercise: ${e.id}`)
+  return { ...e, anim: form[0], repStyle: form[1] }
+})
 
 export const byId = new Map(EXERCISES.map((e) => [e.id, e]))
 

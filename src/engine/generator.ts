@@ -317,7 +317,10 @@ function buildPyramid(ctx: BuildContext): { items: WorkoutItem[]; circuits: numb
 /** Suggested reps for one AMRAP round: easier and cardio moves get more. */
 function amrapReps(e: Exercise): number {
   const base = e.kind === 'cardio' ? 24 : e.kind === 'core' ? 16 : 14
-  return Math.max(5, base - e.difficulty * 2)
+  const reps = Math.max(5, base - e.difficulty * 2)
+  // Alternating moves count each side as a rep — keep the target even so it
+  // splits cleanly between sides.
+  return e.repStyle === 'alternating' ? Math.max(6, Math.round(reps / 2) * 2) : reps
 }
 
 function buildAmrap(ctx: BuildContext): { items: WorkoutItem[]; circuits: number; totalSeconds: number } {
