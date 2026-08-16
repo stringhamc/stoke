@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { FlagSheet } from '../components/FlagSheet'
 import { FormAnim } from '../components/FormAnim'
 import { getExercise } from '../data/exercises'
-import { sfx, speak, stopSpeaking } from '../engine/audio'
+import { hypeLine, sfx, speak, stopSpeaking } from '../engine/audio'
 import { repNote } from '../engine/reps'
 import { useStore } from '../state/store'
 import type { Feedback } from '../types'
@@ -67,11 +67,19 @@ function IntervalPlayer({ onExit }: { onExit: () => void }) {
 
   useEffect(() => {
     if (remaining > 0 || phase === 'done') return
+    const totalWork = steps.filter((s) => s.phase === 'work').length
     const announce = (slotIdx: number) => {
       if (!voice) return
       const nx = getExercise(w.items[slotIdx].exerciseId)
       const note = repNote(nx)
-      speak(note ? `${nx.name}. ${note}` : nx.name)
+      const base = note ? `${nx.name}. ${note}` : nx.name
+      const workNumber = completedWork.current + 1
+      // Trainer energy: hype every third interval, special call on the last.
+      const line =
+        workNumber === totalWork ? `Last one — push! ${base}`
+        : workNumber % 3 === 0 ? `${hypeLine(workNumber / 3)} ${base}`
+        : base
+      speak(line, 'pump')
     }
     if (phase === 'get_ready') {
       if (sound) sfx.go()
@@ -84,7 +92,7 @@ function IntervalPlayer({ onExit }: { onExit: () => void }) {
     const next = stepIndex + 1
     if (next >= steps.length) {
       if (sound) sfx.done()
-      if (voice) speak('Workout complete. Great job!')
+      if (voice) speak('Workout complete. Great job!', 'pump')
       setPhase('done')
       return
     }

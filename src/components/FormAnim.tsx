@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { ANIMS } from '../data/anims'
+import { ANIMS, ANIM_MS } from '../data/anims'
 import type { AnimId, Pose, Pt } from '../data/anims'
-
-const CYCLE_MS = 1100
 
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t
@@ -30,17 +28,19 @@ export function FormAnim({ animId, size = 150 }: { animId: AnimId; size?: number
     const svg = svgRef.current
     if (!svg || poses.length === 0) return
     const head = svg.querySelector<SVGCircleElement>('circle')!
-    const lines = LIMBS.map((_, i) => svg.querySelectorAll<SVGPolylineElement>('polyline')[i])
+    const limbEls = svg.querySelectorAll<SVGPolylineElement>('polyline.anim-limb')
+    const lines = LIMBS.map((_, i) => limbEls[i])
 
     // Ping-pong through poses: A→B→…→B→A.
     const seq = poses.length === 1 ? [poses[0], poses[0]] : [...poses, ...poses.slice(1, -1).reverse()]
+    const cycleMs = ANIM_MS[animId] ?? 900
     let raf = 0
     const start = performance.now()
 
     const draw = (now: number) => {
       // rAF timestamps can be a hair before the performance.now() above.
       const elapsed = Math.max(0, now - start)
-      const phase = (elapsed / CYCLE_MS) % seq.length
+      const phase = (elapsed / cycleMs) % seq.length
       const idx = Math.min(seq.length - 1, Math.floor(phase))
       const rawT = phase - idx
       const t = 0.5 - 0.5 * Math.cos(Math.PI * rawT) // ease in-out
@@ -70,6 +70,7 @@ export function FormAnim({ animId, size = 150 }: { animId: AnimId; size?: number
       aria-hidden="true"
     >
       <line x1="4" y1="91" x2="96" y2="91" className="anim-ground" />
+      {first.prop && <polyline points={toPoints(first.prop)} className="anim-prop" />}
       <circle cx={first.head[0]} cy={first.head[1]} r="6.5" className="anim-head" />
       {LIMBS.map((limb) => (
         <polyline key={limb} points={toPoints(first[limb] as Pt[])} className="anim-limb" />

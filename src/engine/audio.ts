@@ -52,17 +52,70 @@ export const sfx = {
   },
 }
 
-/** Speak a cue via the browser's built-in voice; replaces any pending cue. */
-export function speak(text: string) {
+/**
+ * Pick the most natural-sounding English voice the device offers. Modern
+ * platforms ship neural voices (Siri, Google, "Natural"/"Enhanced" variants)
+ * alongside the robotic legacy ones — prefer those, in quality order.
+ */
+let cachedVoice: SpeechSynthesisVoice | null | undefined
+
+function bestVoice(): SpeechSynthesisVoice | null {
+  if (cachedVoice !== undefined) return cachedVoice
+  try {
+    const voices = window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith('en'))
+    if (voices.length === 0) return null // list may not be loaded yet — retry next call
+    const tiers = [
+      /natural|neural|premium/i,
+      /enhanced|siri/i,
+      /google (us|uk) english/i,
+      /samantha|daniel|karen|moira/i,
+    ]
+    for (const tier of tiers) {
+      const hit = voices.find((v) => tier.test(v.name))
+      if (hit) return (cachedVoice = hit)
+    }
+    return (cachedVoice = voices.find((v) => v.default) ?? voices[0] ?? null)
+  } catch {
+    return (cachedVoice = null)
+  }
+}
+
+// The voice list loads asynchronously on some platforms; refresh the pick.
+try {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      cachedVoice = undefined
+      bestVoice()
+    }
+  }
+} catch {
+  // ignore
+}
+
+/**
+ * Speak a cue; replaces any pending cue. `energy: 'pump'` pushes rate and
+ * pitch up for trainer-style hype lines.
+ */
+export function speak(text: string, energy: 'calm' | 'pump' = 'calm') {
   try {
     if (!('speechSynthesis' in window)) return
     window.speechSynthesis.cancel()
     const u = new SpeechSynthesisUtterance(text)
-    u.rate = 1.05
+    const voice = bestVoice()
+    if (voice) u.voice = voice
+    u.rate = energy === 'pump' ? 1.18 : 1.05
+    u.pitch = energy === 'pump' ? 1.12 : 1.0
     window.speechSynthesis.speak(u)
   } catch {
     // voice is a nice-to-have
   }
+}
+
+/** Rotating trainer hype, deterministic by index so it doesn't repeat back-to-back. */
+const HYPE = ['Let’s go!', 'You’ve got this!', 'Nice pace — keep it up!', 'Strong! Stay with it!', 'Push through!']
+
+export function hypeLine(i: number): string {
+  return HYPE[i % HYPE.length]
 }
 
 export function stopSpeaking() {

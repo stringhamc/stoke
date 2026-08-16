@@ -17,13 +17,29 @@ export interface Pose {
   /** hip → knee → foot */
   legL: [Pt, Pt, Pt]
   legR: [Pt, Pt, Pt]
+  /** static scenery (box, bench, wall) drawn from the first pose only */
+  prop?: Pt[]
 }
 
 export type AnimId =
-  | 'jack' | 'run' | 'skater' | 'burpee' | 'climber' | 'squat' | 'lunge'
-  | 'wallsit' | 'bridge' | 'calfraise' | 'hinge' | 'row' | 'pushup' | 'press'
-  | 'plank' | 'sideplank' | 'crunch' | 'legraise' | 'superman' | 'birddog'
-  | 'catcow' | 'twist' | 'dip' | 'mobility'
+  | 'jack' | 'run' | 'buttkick' | 'skater' | 'burpee' | 'climber' | 'squat' | 'lunge'
+  | 'sidelunge' | 'stepup' | 'wallsit' | 'bridge' | 'calfraise' | 'hinge' | 'row'
+  | 'pushup' | 'press' | 'punch' | 'plank' | 'sideplank' | 'crunch' | 'legraise'
+  | 'flutter' | 'deadbug' | 'superman' | 'birddog' | 'catcow' | 'twist' | 'dip' | 'mobility'
+
+/**
+ * Cycle speed per animation (ms per pose transition). Quick ballistic moves
+ * (running, flutters, punches) cycle fast; grinds are moderate; isometric
+ * holds just breathe slowly.
+ */
+export const ANIM_MS: Record<AnimId, number> = {
+  run: 450, buttkick: 450, flutter: 420, punch: 450, climber: 550,
+  jack: 650, skater: 650, twist: 650, burpee: 750, crunch: 800, row: 800,
+  squat: 900, lunge: 900, sidelunge: 900, stepup: 950, pushup: 900,
+  press: 900, bridge: 900, calfraise: 900, legraise: 950, deadbug: 950,
+  hinge: 1000, dip: 950, superman: 1100, birddog: 1100,
+  mobility: 1300, catcow: 1300, plank: 1700, wallsit: 1700, sideplank: 1700,
+}
 
 const stand: Pose = {
   head: [50, 13],
@@ -62,6 +78,25 @@ export const ANIMS: Record<AnimId, Pose[]> = {
       armR: [[50, 26], [58, 33], [64, 26]],
       legL: [[50, 50], [51, 70], [53, 88]],
       legR: [[50, 50], [62, 57], [60, 72]],
+    },
+  ],
+  buttkick: [
+    // Heels kick up behind toward the glutes — knees point down, not forward.
+    {
+      head: [50, 13],
+      torso: [[50, 20], [50, 50]],
+      armL: [[50, 26], [57, 33], [62, 27]],
+      armR: [[50, 26], [44, 34], [39, 41]],
+      legL: [[50, 50], [46, 67], [38, 58]],
+      legR: [[50, 50], [52, 69], [53, 88]],
+    },
+    {
+      head: [50, 13],
+      torso: [[50, 20], [50, 50]],
+      armL: [[50, 26], [44, 34], [39, 41]],
+      armR: [[50, 26], [57, 33], [62, 27]],
+      legL: [[50, 50], [48, 69], [47, 88]],
+      legR: [[50, 50], [54, 67], [46, 58]],
     },
   ],
   skater: [
@@ -121,13 +156,14 @@ export const ANIMS: Record<AnimId, Pose[]> = {
   ],
   squat: [
     stand,
+    // Feet stay planted where they stood; hips sit back, knees track forward.
     {
       head: [54, 36],
       torso: [[53, 43], [47, 62]],
       armL: [[51, 47], [61, 49], [69, 50]],
       armR: [[53, 49], [63, 51], [70, 53]],
-      legL: [[47, 62], [56, 72], [52, 89]],
-      legR: [[47, 62], [42, 76], [45, 90]],
+      legL: [[47, 62], [58, 71], [46, 88]],
+      legR: [[47, 62], [60, 73], [54, 88]],
     },
   ],
   lunge: [
@@ -141,6 +177,47 @@ export const ANIMS: Record<AnimId, Pose[]> = {
       legR: [[46, 57], [60, 64], [60, 86]],
     },
   ],
+  stepup: [
+    // Step onto a box: one foot up, then drive to standing on top.
+    {
+      head: [40, 14],
+      torso: [[40, 20], [41, 50]],
+      armL: [[40, 26], [35, 36], [36, 44]],
+      armR: [[40, 26], [46, 35], [48, 42]],
+      legL: [[41, 50], [40, 69], [39, 88]],
+      legR: [[41, 50], [53, 56], [64, 74]],
+      prop: [[58, 90], [58, 76], [88, 76], [88, 90]],
+    },
+    {
+      head: [64, 5],
+      torso: [[64, 11], [63, 40]],
+      armL: [[64, 17], [59, 26], [60, 34]],
+      armR: [[64, 17], [69, 26], [70, 33]],
+      legL: [[63, 40], [61, 57], [61, 74]],
+      legR: [[63, 40], [67, 57], [66, 74]],
+      prop: [[58, 90], [58, 76], [88, 76], [88, 90]],
+    },
+  ],
+  sidelunge: [
+    // Frontal view: feet stay wide and planted; hips shift over one leg,
+    // then the other.
+    {
+      head: [42, 26],
+      torso: [[43, 32], [44, 56]],
+      armL: [[43, 38], [36, 46], [38, 54]],
+      armR: [[43, 38], [50, 46], [48, 54]],
+      legL: [[44, 56], [36, 70], [32, 88]],
+      legR: [[44, 56], [56, 72], [66, 88]],
+    },
+    {
+      head: [58, 26],
+      torso: [[57, 32], [56, 56]],
+      armL: [[57, 38], [50, 46], [52, 54]],
+      armR: [[57, 38], [64, 46], [62, 54]],
+      legL: [[56, 56], [44, 72], [34, 88]],
+      legR: [[56, 56], [64, 70], [68, 88]],
+    },
+  ],
   wallsit: [
     {
       head: [62, 26],
@@ -149,6 +226,7 @@ export const ANIMS: Record<AnimId, Pose[]> = {
       armR: [[62, 38], [65, 48], [66, 56]],
       legL: [[62, 56], [45, 56], [45, 80]],
       legR: [[62, 56], [48, 58], [48, 82]],
+      prop: [[67, 92], [67, 22]],
     },
     {
       head: [62, 29],
@@ -157,6 +235,7 @@ export const ANIMS: Record<AnimId, Pose[]> = {
       armR: [[62, 41], [65, 51], [66, 59]],
       legL: [[62, 59], [45, 59], [45, 81]],
       legR: [[62, 59], [48, 61], [48, 83]],
+      prop: [[67, 92], [67, 22]],
     },
   ],
   bridge: [
@@ -253,6 +332,25 @@ export const ANIMS: Record<AnimId, Pose[]> = {
       legR: [[50, 50], [53, 69], [54, 88]],
     },
   ],
+  punch: [
+    // Jabs extend forward from a guard, not overhead.
+    {
+      head: [48, 14],
+      torso: [[48, 20], [48, 50]],
+      armL: [[48, 26], [58, 26], [68, 25]],
+      armR: [[48, 26], [53, 33], [51, 27]],
+      legL: [[48, 50], [44, 69], [43, 88]],
+      legR: [[48, 50], [53, 69], [55, 88]],
+    },
+    {
+      head: [48, 14],
+      torso: [[48, 20], [48, 50]],
+      armL: [[48, 26], [52, 33], [50, 27]],
+      armR: [[48, 26], [58, 27], [68, 26]],
+      legL: [[48, 50], [44, 69], [43, 88]],
+      legR: [[48, 50], [53, 69], [55, 88]],
+    },
+  ],
   plank: [
     {
       head: [21, 53],
@@ -323,6 +421,44 @@ export const ANIMS: Record<AnimId, Pose[]> = {
       armR: [[28, 83], [35, 86], [41, 88]],
       legL: [[45, 84], [51, 66], [55, 50]],
       legR: [[45, 84], [53, 68], [57, 52]],
+    },
+  ],
+  flutter: [
+    // Legs hover and scissor alternately — never together.
+    {
+      head: [15, 80],
+      torso: [[21, 82], [45, 84]],
+      armL: [[25, 83], [32, 86], [38, 87]],
+      armR: [[28, 83], [35, 86], [41, 88]],
+      legL: [[45, 84], [57, 74], [68, 64]],
+      legR: [[45, 84], [59, 80], [72, 78]],
+    },
+    {
+      head: [15, 80],
+      torso: [[21, 82], [45, 84]],
+      armL: [[25, 83], [32, 86], [38, 87]],
+      armR: [[28, 83], [35, 86], [41, 88]],
+      legL: [[45, 84], [57, 80], [70, 78]],
+      legR: [[45, 84], [59, 74], [70, 62]],
+    },
+  ],
+  deadbug: [
+    // Opposite arm and leg extend while the others stay tucked, then swap.
+    {
+      head: [17, 80],
+      torso: [[24, 82], [46, 84]],
+      armL: [[26, 82], [16, 74], [8, 68]],
+      armR: [[29, 82], [30, 70], [31, 60]],
+      legL: [[46, 84], [58, 78], [70, 74]],
+      legR: [[46, 84], [52, 68], [62, 66]],
+    },
+    {
+      head: [17, 80],
+      torso: [[24, 82], [46, 84]],
+      armL: [[26, 82], [27, 70], [28, 60]],
+      armR: [[29, 82], [19, 74], [11, 68]],
+      legL: [[46, 84], [52, 68], [62, 66]],
+      legR: [[46, 84], [58, 78], [70, 74]],
     },
   ],
   superman: [
@@ -405,6 +541,7 @@ export const ANIMS: Record<AnimId, Pose[]> = {
       armR: [[43, 43], [51, 53], [53, 63]],
       legL: [[43, 58], [58, 66], [61, 84]],
       legR: [[43, 58], [60, 68], [63, 86]],
+      prop: [[46, 90], [48, 62], [64, 62]],
     },
     {
       head: [39, 41],
@@ -413,6 +550,7 @@ export const ANIMS: Record<AnimId, Pose[]> = {
       armR: [[42, 51], [50, 58], [53, 64]],
       legL: [[43, 65], [58, 70], [61, 86]],
       legR: [[43, 65], [60, 72], [63, 88]],
+      prop: [[46, 90], [48, 62], [64, 62]],
     },
   ],
   mobility: [
