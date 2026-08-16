@@ -14,6 +14,8 @@ const DEFAULT_PROFILE: UserProfile = {
   equipment: [],
   excluded: [],
   flags: [],
+  soundEffects: true,
+  voiceCues: true,
   onboarded: false,
 }
 

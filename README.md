@@ -41,8 +41,15 @@ persists in your browser.
   level has grown a full level. Flags are managed in Settings.
 - **Equipment-aware** — bodyweight-only by default; a chair, wall, dumbbells or
   a band unlock more variety.
-- **Guided player** — full-screen interval timer with work/rest phases, audio
-  cues, pause/skip/back, and a post-workout feedback prompt.
+- **Guided player** — full-screen interval timer with work/rest phases,
+  animated stick-figure form demos for every exercise, 3-2-1 countdown ticks,
+  distinct go/rest tones, a finish fanfare, and spoken cues announcing each
+  exercise (toggle effects and voice separately in Settings).
+- **Explicit rep counting** — every exercise declares how reps count.
+  Alternating moves (lunges, mountain climbers…): each side counts as one rep,
+  shown as e.g. "12 reps — alternating, 6 per side". Per-side moves (split
+  squats, side plank…): timed intervals say "switch sides halfway" and rep
+  targets mean that many on each side.
 - **Training status** — a watch-style readout of where your training is:
   *detraining*, *recovery*, *maintaining*, *productive*, or *overreaching*,
   classified from your recent load vs. plan, workout feedback, and the fitness

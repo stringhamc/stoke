@@ -42,6 +42,8 @@ export function Onboarding() {
       equipment,
       excluded: [],
       flags: [],
+      soundEffects: true,
+      voiceCues: true,
       onboarded: true,
     }
     dispatch({ type: 'complete_onboarding', profile, initialScore: level })

@@ -76,6 +76,25 @@ export function Settings() {
       </section>
 
       <section className="card">
+        <h2>Sound</h2>
+        <div className="chip-grid">
+          <button
+            className={`chip ${p.soundEffects ? 'chip-on' : ''}`}
+            onClick={() => dispatch({ type: 'update_profile', patch: { soundEffects: !p.soundEffects } })}
+          >
+            🔔 Effects {p.soundEffects ? 'on' : 'off'}
+          </button>
+          <button
+            className={`chip ${p.voiceCues ? 'chip-on' : ''}`}
+            onClick={() => dispatch({ type: 'update_profile', patch: { voiceCues: !p.voiceCues } })}
+          >
+            🗣️ Voice cues {p.voiceCues ? 'on' : 'off'}
+          </button>
+        </div>
+        <p className="muted">Countdown ticks, start/rest tones, and spoken exercise announcements in the player.</p>
+      </section>
+
+      <section className="card">
         <h2>Equipment</h2>
         <div className="chip-grid">
           {EQUIPMENT_OPTIONS.map((q) => (
