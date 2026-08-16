@@ -3,6 +3,9 @@
 Short, adaptive interval workouts — no gym, no account, everything runs and
 persists in your browser.
 
+**Live app:** https://stringhamc.github.io/stoke/ — open on your phone and
+"Add to Home Screen" to install.
+
 ## Features
 
 - **Daily workout suggestions** — every day the app generates a workout tuned
