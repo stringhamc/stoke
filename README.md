@@ -47,7 +47,10 @@ persists in your browser.
 - **Guided player** — full-screen interval timer with work/rest phases,
   animated stick-figure form demos for every exercise, 3-2-1 countdown ticks,
   distinct go/rest tones, a finish fanfare, and spoken cues announcing each
-  exercise (toggle effects and voice separately in Settings).
+  exercise (toggle effects and voice separately in Settings). Cues are
+  designed to mix over your own music (Spotify, Pandora, …) rather than
+  pause it — see `docs/native-packaging.md` for how the native builds
+  guarantee this.
 - **Explicit rep counting** — every exercise declares how reps count.
   Alternating moves (lunges, mountain climbers…): each side counts as one rep,
   shown as e.g. "12 reps — alternating, 6 per side". Per-side moves (split
@@ -81,7 +84,9 @@ app in one file; download and double-click it (regenerate with
 
 Native store apps are a straightforward later step: the codebase is fully
 client-side, so it can be wrapped with Capacitor for App Store / Play Store
-distribution without code changes.
+distribution without code changes — see `docs/native-packaging.md` for the
+steps and the required audio-session setup (cues must mix with, not pause,
+the user's music).
 
 ## Tech
 

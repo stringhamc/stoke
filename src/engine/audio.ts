@@ -1,6 +1,19 @@
-/** Synthesized sound effects and voice cues — no audio assets needed. */
+/**
+ * Synthesized sound effects and voice cues — no audio assets needed.
+ *
+ * Music-friendly by design: cues must MIX with whatever the user is already
+ * playing (Spotify, Pandora, …), never pause it. Two rules serve that:
+ * - only Web Audio oscillators, never <audio>/media elements — media elements
+ *   claim media focus and pause other apps' playback
+ * - the AudioContext is suspended whenever no cue is sounding, so the app
+ *   holds the OS audio session only for the ~1s a cue lasts
+ * The native (Capacitor) builds additionally pin the OS audio session to
+ * mix-with-others — see docs/native-packaging.md.
+ */
 
 let ctx: AudioContext | null = null
+let suspendTimer: ReturnType<typeof setTimeout> | null = null
+let busyUntil = 0
 
 function audioCtx(): AudioContext | null {
   try {
@@ -16,6 +29,20 @@ function audioCtx(): AudioContext | null {
   }
 }
 
+/** Suspend the context shortly after the last scheduled sound finishes. */
+function scheduleRelease(endsAt: number) {
+  busyUntil = Math.max(busyUntil, endsAt)
+  if (suspendTimer) clearTimeout(suspendTimer)
+  const waitMs = Math.max(0, (busyUntil - (ctx?.currentTime ?? 0)) * 1000) + 250
+  suspendTimer = setTimeout(() => {
+    try {
+      if (ctx && ctx.state === 'running') void ctx.suspend()
+    } catch {
+      // ignore
+    }
+  }, waitMs)
+}
+
 function tone(freq: number, at: number, duration: number, volume = 0.09, type: OscillatorType = 'sine') {
   const c = audioCtx()
   if (!c) return
@@ -29,6 +56,7 @@ function tone(freq: number, at: number, duration: number, volume = 0.09, type: O
   osc.connect(gain).connect(c.destination)
   osc.start(t0)
   osc.stop(t0 + duration)
+  scheduleRelease(t0 + duration)
 }
 
 export const sfx = {
