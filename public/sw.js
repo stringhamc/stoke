@@ -1,7 +1,7 @@
 // Minimal offline-first service worker: cache everything the app requests
 // (the shell plus hashed build assets), serve from cache, refresh in the
 // background. Bump the version to invalidate old caches on deploy.
-const CACHE = 'stoke-v1'
+const CACHE = 'stoke-v2'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(['.', 'manifest.webmanifest'])))
