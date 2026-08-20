@@ -1,41 +1,20 @@
 import { useState } from 'react'
 import { FlagSheet } from '../components/FlagSheet'
+import { WorkoutPicker } from '../components/WorkoutPicker'
 import { getExercise } from '../data/exercises'
 import { FORMAT_INFO, swapOptions } from '../engine/generator'
 import { adherenceRatio, currentStreakDays } from '../engine/progression'
 import { repNote } from '../engine/reps'
 import { STATUS_INFO, trainingStatus } from '../engine/status'
 import { FOCUS_LABELS, useStore } from '../state/store'
-import type { Workout, WorkoutFormat } from '../types'
-
-const FORMAT_CHOICES: (WorkoutFormat | null)[] = [null, 'circuit', 'tabata', 'hiit', 'pyramid', 'amrap']
-
-/** One row per distinct exercise, with its repeat count (Tabata repeats moves). */
-function groupItems(w: Workout): { exerciseId: string; firstIndex: number; count: number; workSeconds: number; restSeconds: number; targetReps?: number; swapped: boolean }[] {
-  const groups = new Map<string, { exerciseId: string; firstIndex: number; count: number; workSeconds: number; restSeconds: number; targetReps?: number; swapped: boolean }>()
-  w.items.forEach((item, i) => {
-    const g = groups.get(item.exerciseId)
-    if (g) {
-      g.count++
-    } else {
-      groups.set(item.exerciseId, {
-        exerciseId: item.exerciseId,
-        firstIndex: i,
-        count: 1,
-        workSeconds: item.workSeconds,
-        restSeconds: item.restSeconds,
-        targetReps: item.targetReps,
-        swapped: !!item.swappedFrom,
-      })
-    }
-  })
-  return [...groups.values()]
-}
+import type { Workout } from '../types'
+import { groupItems } from '../utils/workoutGroups'
 
 export function Today({ onStart }: { onStart: () => void }) {
   const { state, dispatch } = useStore()
   const [swapSlot, setSwapSlot] = useState<number | null>(null)
   const [flagSlot, setFlagSlot] = useState<number | null>(null)
+  const [browsing, setBrowsing] = useState(false)
   const w = state.todayWorkout
 
   if (!w) return null
@@ -73,23 +52,6 @@ export function Today({ onStart }: { onStart: () => void }) {
         </div>
       )}
 
-      <div className="format-picker">
-        {FORMAT_CHOICES.map((f) => {
-          const active = (state.formatOverride ?? null) === f
-          return (
-            <button
-              key={f ?? 'auto'}
-              className={`chip ${active ? 'chip-on' : ''}`}
-              onClick={() => dispatch({ type: 'set_format', format: f })}
-              title={f ? FORMAT_INFO[f].blurb : 'Let Stoke rotate formats for you'}
-              aria-pressed={active}
-            >
-              {f ? FORMAT_INFO[f].label : 'Auto'}
-            </button>
-          )
-        })}
-      </div>
-
       <section className="card workout-card">
         <div className="workout-title">
           <div>
@@ -99,9 +61,14 @@ export function Today({ onStart }: { onStart: () => void }) {
             </p>
             <p className="muted format-blurb">{FORMAT_INFO[w.format].blurb}</p>
           </div>
-          <button className="btn-ghost small" onClick={() => dispatch({ type: 'regenerate_today' })} title="Suggest a different workout">
-            ↻ Shuffle
-          </button>
+          <div className="workout-actions">
+            <button className="btn-ghost small" onClick={() => setBrowsing(true)} title="See all of today's workout options">
+              ☰ Browse
+            </button>
+            <button className="btn-ghost small" onClick={() => dispatch({ type: 'regenerate_today' })} title="Suggest a different workout">
+              ↻ Shuffle
+            </button>
+          </div>
         </div>
 
         <ol className="exercise-list">
@@ -145,6 +112,7 @@ export function Today({ onStart }: { onStart: () => void }) {
           }}
         />
       )}
+      {browsing && <WorkoutPicker onClose={() => setBrowsing(false)} />}
       {flagSlot !== null && (
         <FlagSheet
           exerciseId={w.items[flagSlot].exerciseId}
