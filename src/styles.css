@@ -138,6 +138,22 @@ button { font: inherit; cursor: pointer; border: none; border-radius: 10px; colo
 .location-toggle { display: flex; gap: 0.4rem; margin-bottom: 1rem; }
 .hint-warn { color: var(--warn); }
 
+/* ——— Benchmarks ——— */
+.bench-entry { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+.bench-entry input {
+  width: 5rem; padding: 0.6rem; text-align: center; font-size: 1.2rem;
+  border-radius: 10px; border: 1px solid var(--surface-2); background: var(--bg); color: var(--text);
+}
+.bench-entry span { color: var(--muted); }
+.bench-list { list-style: none; margin: 0.5rem 0 0.75rem; padding: 0; }
+.bench-list li {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0.5rem 0; border-bottom: 1px solid var(--surface-2);
+}
+.bench-list li:last-child { border-bottom: none; }
+.bench-up { color: var(--accent); font-size: 0.82rem; font-weight: 700; }
+.bench-down { color: #f87171; font-size: 0.82rem; font-weight: 700; }
+
 /* ——— Workout browser ——— */
 .picker-sheet { gap: 0.6rem; }
 .picker-card { background: var(--surface-2); border-radius: 12px; overflow: hidden; }

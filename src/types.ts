@@ -128,6 +128,13 @@ export interface ProgressionState {
   sessions: SessionRecord[]
 }
 
+/** One sitting of the fitness test battery; skipped tests are absent. */
+export interface BenchmarkSession {
+  date: string
+  /** test id → measured value (reps or seconds, per the test's unit) */
+  results: Record<string, number>
+}
+
 export interface AppState {
   profile: UserProfile
   progression: ProgressionState
@@ -137,4 +144,6 @@ export interface AppState {
   formatOverride?: WorkoutFormat | null
   /** where the user is training today — gym unlocks gym equipment */
   locationToday?: 'home' | 'gym'
+  /** fitness-test history, oldest first */
+  benchmarks?: BenchmarkSession[]
 }

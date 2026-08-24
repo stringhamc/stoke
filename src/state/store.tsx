@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode } from 'react'
-import type { AppState, ExerciseFlagReason, Feedback, FocusArea, JointArea, UserProfile, Workout, WorkoutFormat } from '../types'
+import type { AppState, BenchmarkSession, ExerciseFlagReason, Feedback, FocusArea, JointArea, UserProfile, Workout, WorkoutFormat } from '../types'
+import { blendScore, estimateScore } from '../engine/benchmark'
 import { applySwap, generateWorkout, swapOptions } from '../engine/generator'
 import { applySession, decayForInactivity, isoDay } from '../engine/progression'
 
@@ -36,6 +37,7 @@ const INITIAL: AppState = {
   todayWorkout: null,
   formatOverride: null,
   locationToday: 'home',
+  benchmarks: [],
 }
 
 type Action =
@@ -45,6 +47,7 @@ type Action =
   | { type: 'regenerate_today' }
   | { type: 'set_format'; format: WorkoutFormat | null }
   | { type: 'set_location'; location: 'home' | 'gym' }
+  | { type: 'save_benchmark'; session: BenchmarkSession }
   | { type: 'swap'; slotIndex: number; newExerciseId: string }
   | { type: 'finish_session'; completedItems: number; minutes: number; feedback: Feedback }
   | { type: 'exclude_exercise'; id: string }
@@ -80,6 +83,20 @@ function reducer(state: AppState, action: Action): AppState {
       return withFreshWorkout({ ...state, formatOverride: action.format })
     case 'set_location':
       return withFreshWorkout({ ...state, locationToday: action.location })
+    // A test session recalibrates the fitness score (half-weight blend) and
+    // regenerates today's plan at the corrected level.
+    case 'save_benchmark': {
+      const benchmarks = [...(state.benchmarks ?? []), action.session]
+      const estimate = estimateScore(action.session)
+      const fitnessScore = estimate === null
+        ? state.progression.fitnessScore
+        : blendScore(state.progression.fitnessScore, estimate)
+      return withFreshWorkout({
+        ...state,
+        benchmarks,
+        progression: { ...state.progression, fitnessScore },
+      })
+    }
     case 'swap': {
       if (!state.todayWorkout) return state
       return { ...state, todayWorkout: applySwap(state.todayWorkout, action.slotIndex, action.newExerciseId) }
@@ -153,6 +170,7 @@ function load(): AppState {
       todayWorkout: parsed.todayWorkout ?? null,
       formatOverride: parsed.formatOverride ?? null,
       locationToday: parsed.locationToday ?? 'home',
+      benchmarks: parsed.benchmarks ?? [],
     }
   } catch {
     return INITIAL

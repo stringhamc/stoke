@@ -68,6 +68,12 @@ persists in your browser.
   shown as e.g. "12 reps — alternating, 6 per side". Per-side moves (split
   squats, side plank…): timed intervals say "switch sides halfway" and rep
   targets mean that many on each side.
+- **Fitness benchmarks** — a guided field-test battery (max push-ups, squats
+  in 60s, timed plank hold, max pull-ups, burpees in 60s, optional 1-mile run
+  time) establishes a baseline and recalibrates the fitness score
+  (half-weight blend, so one test day never whiplashes the plan). Every test
+  is skippable, results live on the Progress tab with change-over-time
+  arrows, and a nudge suggests retesting every 4 weeks.
 - **Training status** — a watch-style readout of where your training is:
   *detraining*, *recovery*, *maintaining*, *productive*, or *overreaching*,
   classified from your recent load vs. plan, workout feedback, and the fitness
