@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { getExercise } from '../data/exercises'
 import { FORMAT_INFO, generateWorkout, pickFocus, pickFormat } from '../engine/generator'
 import { repNote } from '../engine/reps'
-import { useStore } from '../state/store'
+import { effectiveProfile, useStore } from '../state/store'
 import type { Workout, WorkoutFormat } from '../types'
 import { groupItems } from '../utils/workoutGroups'
 
@@ -19,12 +19,13 @@ export function WorkoutPicker({ onClose }: { onClose: () => void }) {
 
   const { candidates, planned } = useMemo(() => {
     const date = new Date()
-    const focus = pickFocus(state.profile, state.progression, date)
-    const plannedFormat = pickFormat(state.profile, state.progression.fitnessScore, focus, date)
-    const all = ALL_FORMATS.map((f) => generateWorkout(state.profile, state.progression, date, f))
+    const profile = effectiveProfile(state)
+    const focus = pickFocus(profile, state.progression, date)
+    const plannedFormat = pickFormat(profile, state.progression.fitnessScore, focus, date)
+    const all = ALL_FORMATS.map((f) => generateWorkout(profile, state.progression, date, f))
     all.sort((a, b) => Number(b.format === plannedFormat) - Number(a.format === plannedFormat))
     return { candidates: all, planned: plannedFormat }
-  }, [state.profile, state.progression])
+  }, [state])
 
   const choose = (w: Workout) => {
     // Choosing the planned workout returns to Auto so the daily rotation

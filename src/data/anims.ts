@@ -26,6 +26,7 @@ export type AnimId =
   | 'sidelunge' | 'stepup' | 'wallsit' | 'bridge' | 'calfraise' | 'hinge' | 'row'
   | 'pushup' | 'press' | 'punch' | 'plank' | 'sideplank' | 'crunch' | 'legraise'
   | 'flutter' | 'deadbug' | 'superman' | 'birddog' | 'catcow' | 'twist' | 'dip' | 'mobility'
+  | 'hang' | 'pullup'
 
 /**
  * Cycle speed per animation (ms per pose transition). Quick ballistic moves
@@ -39,6 +40,7 @@ export const ANIM_MS: Record<AnimId, number> = {
   press: 900, bridge: 900, calfraise: 900, legraise: 950, deadbug: 950,
   hinge: 1000, dip: 950, superman: 1100, birddog: 1100,
   mobility: 1300, catcow: 1300, plank: 1700, wallsit: 1700, sideplank: 1700,
+  hang: 1700, pullup: 1000,
 }
 
 const stand: Pose = {
@@ -551,6 +553,48 @@ export const ANIMS: Record<AnimId, Pose[]> = {
       legL: [[43, 65], [58, 70], [61, 86]],
       legR: [[43, 65], [60, 72], [63, 88]],
       prop: [[46, 90], [48, 62], [64, 62]],
+    },
+  ],
+  hang: [
+    // Dead hang from a bar: long arms, active shoulders, gentle sway.
+    {
+      head: [50, 28],
+      torso: [[50, 34], [50, 58]],
+      armL: [[50, 37], [44, 27], [42, 17]],
+      armR: [[50, 37], [56, 27], [58, 17]],
+      legL: [[50, 58], [48, 72], [47, 84]],
+      legR: [[50, 58], [52, 72], [53, 84]],
+      prop: [[18, 15], [82, 15]],
+    },
+    {
+      head: [50, 25],
+      torso: [[50, 31], [50, 55]],
+      armL: [[50, 34], [44, 26], [42, 17]],
+      armR: [[50, 34], [56, 26], [58, 17]],
+      legL: [[50, 55], [48, 69], [46, 81]],
+      legR: [[50, 55], [52, 69], [54, 81]],
+      prop: [[18, 15], [82, 15]],
+    },
+  ],
+  pullup: [
+    // Dead hang → chin over the bar, controlled both ways.
+    {
+      head: [50, 28],
+      torso: [[50, 34], [50, 58]],
+      armL: [[50, 37], [44, 27], [42, 17]],
+      armR: [[50, 37], [56, 27], [58, 17]],
+      legL: [[50, 58], [48, 72], [47, 84]],
+      legR: [[50, 58], [52, 72], [53, 84]],
+      prop: [[18, 15], [82, 15]],
+    },
+    {
+      head: [50, 12],
+      torso: [[50, 18], [50, 42]],
+      armL: [[50, 20], [43, 20], [42, 16]],
+      armR: [[50, 20], [57, 20], [58, 16]],
+      legL: [[50, 42], [47, 56], [43, 68]],
+      legR: [[50, 42], [53, 56], [48, 70]],
+      prop: [[18, 15], [82, 15]],
     },
   ],
   mobility: [

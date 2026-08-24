@@ -1,6 +1,15 @@
 export type FocusArea = 'full_body' | 'upper_body' | 'lower_body' | 'core' | 'cardio' | 'mobility'
 
-export type Equipment = 'none' | 'chair' | 'wall' | 'dumbbells' | 'band'
+export type Equipment =
+  | 'none' | 'chair' | 'wall' | 'dumbbells' | 'band'
+  // gym gear
+  | 'rower' | 'treadmill' | 'trx' | 'pullup_bar' | 'machines'
+
+/**
+ * Training goals the user is working toward. Selection is capped at three —
+ * focused training beats scattered training, and the UI nudges toward 2–3.
+ */
+export type Goal = 'build_muscle' | 'pullups' | 'running' | 'leaner' | 'mobility'
 
 export type Impact = 'low' | 'moderate' | 'high'
 
@@ -56,7 +65,12 @@ export interface UserProfile {
   focusAreas: FocusArea[]
   /** target workout days per week */
   targetDaysPerWeek: number
+  /** what the user is training toward (max 3 at a time) */
+  goals: Goal[]
+  /** equipment available at home */
   equipment: Equipment[]
+  /** extra equipment available when training at the gym */
+  gymEquipment: Equipment[]
   /** exercise ids the user never wants to see (dislike) */
   excluded: string[]
   /** exercises the user marked as painful or too difficult */
@@ -121,4 +135,6 @@ export interface AppState {
   todayWorkout: Workout | null
   /** user-picked format for today; null/undefined = let the app choose */
   formatOverride?: WorkoutFormat | null
+  /** where the user is training today — gym unlocks gym equipment */
+  locationToday?: 'home' | 'gym'
 }

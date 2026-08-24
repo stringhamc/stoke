@@ -11,6 +11,18 @@ persists in your browser.
 - **Daily workout suggestions** — every day the app generates a workout tuned
   to your current fitness level. Consecutive slots rotate muscle groups so each
   area recovers while the next one works.
+- **Training goals (pick up to 3)** — build muscle, master pull-ups, keep
+  running strong, get leaner, move better. The picker nudges toward a focused
+  2–3 at a time. Goals actively steer generation: strength work is weighted up
+  for muscle-building, the pull-ups goal guarantees a pulling exercise in
+  every workout (climbing a ladder from dead hangs through negatives to full
+  pull-ups), running keeps run-pattern cardio in rotation, and leaner tilts
+  format selection toward HIIT/Tabata.
+- **Gym mode** — declare your gym's gear (rower, treadmill, TRX, pull-up bar,
+  weight machines) and flip the Home/Gym toggle on the Today screen when
+  you're there. Gym workouts open with a 90-second rowing-machine warm-up
+  whenever a rower is available, and TRX/machine/pull-up-bar exercises join
+  the pools.
 - **Five training formats** — the app rotates between them day to
   day, or pick one yourself on the Today screen:
   - *Circuit* — one timed interval of each exercise, 1–3 rounds

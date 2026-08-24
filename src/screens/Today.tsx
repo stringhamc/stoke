@@ -6,7 +6,7 @@ import { FORMAT_INFO, swapOptions } from '../engine/generator'
 import { adherenceRatio, currentStreakDays } from '../engine/progression'
 import { repNote } from '../engine/reps'
 import { STATUS_INFO, trainingStatus } from '../engine/status'
-import { FOCUS_LABELS, useStore } from '../state/store'
+import { effectiveProfile, FOCUS_LABELS, useStore } from '../state/store'
 import type { Workout } from '../types'
 import { groupItems } from '../utils/workoutGroups'
 
@@ -49,6 +49,23 @@ export function Today({ onStart }: { onStart: () => void }) {
         <div className="notice">
           You’ve trained less than usual lately, so today’s session is a little shorter —
           an easy win to get back in rhythm.
+        </div>
+      )}
+
+      {state.profile.gymEquipment.length > 0 && (
+        <div className="location-toggle">
+          <button
+            className={`chip ${state.locationToday !== 'gym' ? 'chip-on' : ''}`}
+            onClick={() => dispatch({ type: 'set_location', location: 'home' })}
+          >
+            🏠 Home
+          </button>
+          <button
+            className={`chip ${state.locationToday === 'gym' ? 'chip-on' : ''}`}
+            onClick={() => dispatch({ type: 'set_location', location: 'gym' })}
+          >
+            🏋️ Gym
+          </button>
         </div>
       )}
 
@@ -143,7 +160,7 @@ function SwapSheet({ slotIndex, onClose, onFlag }: { slotIndex: number; onClose:
   const w = state.todayWorkout
   if (!w) return null
   const current = getExercise(w.items[slotIndex].exerciseId)
-  const options = swapOptions(state.profile, state.progression.fitnessScore, w, slotIndex).slice(0, 8)
+  const options = swapOptions(effectiveProfile(state), state.progression.fitnessScore, w, slotIndex).slice(0, 8)
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>

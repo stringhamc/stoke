@@ -11,7 +11,9 @@ const DEFAULT_PROFILE: UserProfile = {
   goalBalance: 50,
   focusAreas: ['full_body'],
   targetDaysPerWeek: 3,
+  goals: [],
   equipment: [],
+  gymEquipment: [],
   excluded: [],
   flags: [],
   soundEffects: true,
@@ -19,11 +21,21 @@ const DEFAULT_PROFILE: UserProfile = {
   onboarded: false,
 }
 
+/**
+ * The profile as the generator should see it right now: training at the gym
+ * adds the gym equipment to what's available.
+ */
+export function effectiveProfile(state: AppState): UserProfile {
+  if (state.locationToday !== 'gym' || state.profile.gymEquipment.length === 0) return state.profile
+  return { ...state.profile, equipment: [...new Set([...state.profile.equipment, ...state.profile.gymEquipment])] }
+}
+
 const INITIAL: AppState = {
   profile: DEFAULT_PROFILE,
   progression: { fitnessScore: 3, sessions: [] },
   todayWorkout: null,
   formatOverride: null,
+  locationToday: 'home',
 }
 
 type Action =
@@ -32,6 +44,7 @@ type Action =
   | { type: 'ensure_today' }
   | { type: 'regenerate_today' }
   | { type: 'set_format'; format: WorkoutFormat | null }
+  | { type: 'set_location'; location: 'home' | 'gym' }
   | { type: 'swap'; slotIndex: number; newExerciseId: string }
   | { type: 'finish_session'; completedItems: number; minutes: number; feedback: Feedback }
   | { type: 'exclude_exercise'; id: string }
@@ -42,7 +55,7 @@ type Action =
 
 function withFreshWorkout(state: AppState): AppState {
   const progression = decayForInactivity(state.progression)
-  const todayWorkout = generateWorkout(state.profile, progression, new Date(), state.formatOverride)
+  const todayWorkout = generateWorkout(effectiveProfile(state), progression, new Date(), state.formatOverride)
   return { ...state, progression, todayWorkout }
 }
 
@@ -65,6 +78,8 @@ function reducer(state: AppState, action: Action): AppState {
       return withFreshWorkout(state)
     case 'set_format':
       return withFreshWorkout({ ...state, formatOverride: action.format })
+    case 'set_location':
+      return withFreshWorkout({ ...state, locationToday: action.location })
     case 'swap': {
       if (!state.todayWorkout) return state
       return { ...state, todayWorkout: applySwap(state.todayWorkout, action.slotIndex, action.newExerciseId) }
@@ -116,7 +131,7 @@ function reducer(state: AppState, action: Action): AppState {
     case 'resolve_flagged_slot': {
       const w = state.todayWorkout
       if (!w || !w.items[action.slotIndex]) return state
-      const opts = swapOptions(state.profile, state.progression.fitnessScore, w, action.slotIndex)
+      const opts = swapOptions(effectiveProfile(state), state.progression.fitnessScore, w, action.slotIndex)
       if (opts.length > 0) return { ...state, todayWorkout: applySwap(w, action.slotIndex, opts[0].id) }
       const oldId = w.items[action.slotIndex].exerciseId
       const items = w.items.filter((i) => i.exerciseId !== oldId)
@@ -136,6 +151,8 @@ function load(): AppState {
       profile: { ...DEFAULT_PROFILE, ...parsed.profile },
       progression: { ...INITIAL.progression, ...parsed.progression },
       todayWorkout: parsed.todayWorkout ?? null,
+      formatOverride: parsed.formatOverride ?? null,
+      locationToday: parsed.locationToday ?? 'home',
     }
   } catch {
     return INITIAL
