@@ -153,6 +153,13 @@ button { font: inherit; cursor: pointer; border: none; border-radius: 10px; colo
 .bench-list li:last-child { border-bottom: none; }
 .bench-up { color: var(--accent); font-size: 0.82rem; font-weight: 700; }
 .bench-down { color: #f87171; font-size: 0.82rem; font-weight: 700; }
+.bench-row {
+  width: 100%; background: none; padding: 0; text-align: left;
+  display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;
+}
+.bench-row:hover strong { color: var(--accent); }
+.bench-retest { color: var(--muted); margin-left: 0.4rem; }
+.bench-hint { margin-bottom: 0.6rem; }
 
 /* ——— Workout browser ——— */
 .picker-sheet { gap: 0.6rem; }

@@ -1,22 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
 import { FormAnim } from '../components/FormAnim'
 import { sfx, speak, stopSpeaking } from '../engine/audio'
-import { estimateScore, formatValue, testsFor } from '../engine/benchmark'
+import { BENCH_TESTS, estimateScore, formatValue, REST_BEFORE, sessionBlendWeight, testsFor } from '../engine/benchmark'
 import type { BenchTest } from '../engine/benchmark'
 import { useStore } from '../state/store'
 
-type Phase = 'ready' | 'timing' | 'entry'
+type Phase = 'ready' | 'timing' | 'entry' | 'rest'
 
 /**
- * Guided fitness-test battery. Every test is skippable; results save as one
- * benchmark session and recalibrate the fitness score.
+ * Guided fitness tests. As a full battery: fixed order with enforced rests,
+ * so session-to-session numbers stay comparable. With `only` set: one test,
+ * done fresh. Every test is skippable; results save as one benchmark session
+ * and recalibrate the fitness score (battery = half weight, singles = quarter).
  */
-export function Benchmark({ onExit }: { onExit: () => void }) {
+export function Benchmark({ onExit, only }: { onExit: () => void; only?: string }) {
   const { state, dispatch } = useStore()
-  const tests = testsFor(state.profile)
+  const tests = only ? BENCH_TESTS.filter((t) => t.id === only) : testsFor(state.profile)
   const [index, setIndex] = useState(0)
   const [phase, setPhase] = useState<Phase>('ready')
   const [elapsed, setElapsed] = useState(0)
+  const [restSecs, setRestSecs] = useState(0)
   const [entry, setEntry] = useState('')
   const [entryMin, setEntryMin] = useState('')
   const [entrySec, setEntrySec] = useState('')
@@ -27,12 +30,24 @@ export function Benchmark({ onExit }: { onExit: () => void }) {
   const test: BenchTest | undefined = tests[index]
   const done = index >= tests.length
 
-  // One ticking clock for both countdown and stopwatch modes.
+  // One ticking clock for countdowns, stopwatches, and rest periods.
   useEffect(() => {
-    if (phase !== 'timing') return
+    if (phase !== 'timing' && phase !== 'rest') return
     const t = setInterval(() => setElapsed((e) => e + 1), 1000)
     return () => clearInterval(t)
   }, [phase])
+
+  // Rest countdown between battery tests.
+  useEffect(() => {
+    if (phase !== 'rest') return
+    const left = restSecs - elapsed
+    if (left <= 3 && left > 0 && sound) sfx.tick()
+    if (left <= 0) {
+      if (sound) sfx.go()
+      setElapsed(0)
+      setPhase('ready')
+    }
+  }, [elapsed, phase, restSecs, sound])
 
   useEffect(() => {
     if (phase !== 'timing' || !test || test.mode !== 'countdown60') return
@@ -62,9 +77,11 @@ export function Benchmark({ onExit }: { onExit: () => void }) {
           <h2>{measured} of {tests.length} tests recorded</h2>
           {estimate !== null ? (
             <p className="player-desc">
-              Estimated fitness level from this test: <strong>{estimate.toFixed(1)}</strong>. Saving will
-              blend it into your current level ({state.progression.fitnessScore.toFixed(1)}) and retune
-              your workouts. Retest in about 4 weeks to see the numbers move.
+              Estimated fitness level from this test: <strong>{estimate.toFixed(1)}</strong>. Saving
+              {sessionBlendWeight(session) < 0.5
+                ? ' gently nudges your current level (small sessions get quarter weight)'
+                : ` blends it into your current level (${state.progression.fitnessScore.toFixed(1)})`}
+              {' '}and retunes your workouts. Retest in about 4 weeks to see the numbers move.
             </p>
           ) : (
             <p className="player-desc">Nothing recorded this time — no changes will be made.</p>
@@ -89,12 +106,21 @@ export function Benchmark({ onExit }: { onExit: () => void }) {
   }
 
   const advance = (value?: number) => {
-    if (value !== undefined && Number.isFinite(value) && value >= 0) results.current[test.id] = value
-    setPhase('ready')
+    const performed = value !== undefined && Number.isFinite(value) && value >= 0
+    if (performed) results.current[test.id] = value
     setElapsed(0)
     setEntry('')
     setEntryMin('')
     setEntrySec('')
+    const next = tests[index + 1]
+    // Enforced rest before the next battery test — only when this one was
+    // actually performed (a skip costs no fatigue) and the next is physical.
+    if (performed && test.mode !== 'manual_time' && next && next.mode !== 'manual_time' && REST_BEFORE[next.id]) {
+      setRestSecs(REST_BEFORE[next.id])
+      setPhase('rest')
+    } else {
+      setPhase('ready')
+    }
     setIndex(index + 1)
   }
 
@@ -111,11 +137,34 @@ export function Benchmark({ onExit }: { onExit: () => void }) {
 
   const remaining = test.mode === 'countdown60' ? Math.max(0, 60 - elapsed) : elapsed
 
+  if (phase === 'rest') {
+    return (
+      <div className="player player-rest benchmark">
+        <header className="player-header">
+          <button className="btn-ghost small" onClick={onExit}>✕ Exit</button>
+          <span>Fitness test · {index + 1} / {tests.length}</span>
+        </header>
+        <div className="player-main">
+          <p className="phase-label">REST — SHAKE IT OUT</p>
+          <p className="timer">{Math.max(0, restSecs - elapsed)}</p>
+          <h2 className="player-exercise">Next: {test.icon} {test.name}</h2>
+          <p className="player-desc">
+            Full rest keeps the next number honest — and resting the same way every
+            session keeps your tests comparable over time.
+          </p>
+          <button className="btn-ghost" onClick={() => { setElapsed(0); setPhase('ready') }}>
+            I’m ready — skip the rest
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="player benchmark">
       <header className="player-header">
         <button className="btn-ghost small" onClick={onExit}>✕ Exit</button>
-        <span>Fitness test · {index + 1} / {tests.length}</span>
+        <span>{only ? 'Single test' : `Fitness test · ${index + 1} / ${tests.length}`}</span>
       </header>
 
       <div className="player-main">

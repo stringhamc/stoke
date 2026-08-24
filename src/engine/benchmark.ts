@@ -27,7 +27,20 @@ export interface BenchTest {
   lowerIsBetter?: boolean
 }
 
+/**
+ * Battery order is deliberate — least-fatiguing-first so early tests are
+ * fresh and later interference is at least CONSISTENT between sessions
+ * (fixed order + fixed rests keeps numbers comparable even though burpees
+ * after everything else always under-read a little). Pull-ups lead while
+ * the nervous system is fresh; the global-fatigue burpee test goes last;
+ * the mile belongs on its own day.
+ */
 export const BENCH_TESTS: BenchTest[] = [
+  {
+    id: 'pullups_max', name: 'Max Pull-Ups', icon: '🧗', anim: 'pullup', unit: 'reps', mode: 'entry',
+    protocol: 'First while you are fresh. Dead hang to chin over bar, no kipping. Zero is a real baseline — that is exactly what we are here to move.',
+    tenAt: 15,
+  },
   {
     id: 'pushups_max', name: 'Max Push-Ups', icon: '💪', anim: 'pushup', unit: 'reps', mode: 'entry',
     protocol: 'One set to failure, strict form: chest to the floor, full lockout. Knee push-ups count at half — note it and be consistent between tests.',
@@ -44,21 +57,21 @@ export const BENCH_TESTS: BenchTest[] = [
     tenAt: 240,
   },
   {
-    id: 'pullups_max', name: 'Max Pull-Ups', icon: '🧗', anim: 'pullup', unit: 'reps', mode: 'entry',
-    protocol: 'Dead hang to chin over bar, no kipping. Zero is a real baseline — that is exactly what we are here to move.',
-    tenAt: 15,
-  },
-  {
     id: 'burpees_60', name: 'Burpees in 60s', icon: '🔥', anim: 'burpee', unit: 'reps', mode: 'countdown60',
-    protocol: 'As many burpees as you can in one minute (no-jump burpees count — be consistent between tests). This is the engine test.',
+    protocol: 'Last on purpose — everyone hits it equally tired, so it stays comparable. As many burpees as you can in one minute (no-jump counts; be consistent).',
     tenAt: 25,
   },
   {
     id: 'mile_time', name: '1-Mile Run', icon: '🏃', anim: 'run', unit: 'seconds', mode: 'manual_time',
-    protocol: 'Run one mile for time — treadmill or outdoors, timed however you like — and enter it here. Optional but the best endurance yardstick.',
+    protocol: 'Best done fresh on its own day — run one mile for time, treadmill or outdoors, and enter it here (or skip now and add it from the Benchmarks card later).',
     tenAt: 360, lowerIsBetter: true,
   },
 ]
+
+/** Guided rest before each battery test (seconds); the burpee test gets extra. */
+export const REST_BEFORE: Record<string, number> = {
+  pushups_max: 120, squats_60: 120, plank_hold: 120, burpees_60: 180,
+}
 
 /** Tests that make sense for this user's equipment (pull-ups need a bar or assist machine). */
 export function testsFor(profile: UserProfile): BenchTest[] {
@@ -86,11 +99,16 @@ export function estimateScore(session: BenchmarkSession): number | null {
 }
 
 /**
- * Blend a test estimate into the current fitness score. Half-weight keeps one
- * great (or rough) test day from whiplashing the training plan.
+ * Blend a test estimate into the current fitness score. A full battery earns
+ * half weight; a quick single-test session only nudges — one fresh metric
+ * shouldn't steer the whole plan.
  */
-export function blendScore(current: number, estimate: number): number {
-  return clamp(current * 0.5 + estimate * 0.5, 1, 10)
+export function blendScore(current: number, estimate: number, weight = 0.5): number {
+  return clamp(current * (1 - weight) + estimate * weight, 1, 10)
+}
+
+export function sessionBlendWeight(session: BenchmarkSession): number {
+  return Object.keys(session.results).length >= 3 ? 0.5 : 0.25
 }
 
 /** Latest and previous value for a test across sessions, for trend display. */

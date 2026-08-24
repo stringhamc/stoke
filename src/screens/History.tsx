@@ -3,7 +3,7 @@ import { adherenceRatio, currentStreakDays, sessionsInLastDays } from '../engine
 import { STATUS_INFO, trainingStatus } from '../engine/status'
 import { FOCUS_LABELS, useStore } from '../state/store'
 
-export function History({ onStartTest }: { onStartTest: () => void }) {
+export function History({ onStartTest }: { onStartTest: (testId?: string) => void }) {
   const { state } = useStore()
   const { sessions, fitnessScore } = state.progression
   const streak = currentStreakDays(sessions)
@@ -94,7 +94,7 @@ export function History({ onStartTest }: { onStartTest: () => void }) {
   )
 }
 
-function BenchmarksCard({ onStartTest }: { onStartTest: () => void }) {
+function BenchmarksCard({ onStartTest }: { onStartTest: (testId?: string) => void }) {
   const { state } = useStore()
   const benchmarks = state.benchmarks ?? []
   const since = daysSinceTest(benchmarks)
@@ -122,23 +122,32 @@ function BenchmarksCard({ onStartTest }: { onStartTest: () => void }) {
               const improved = delta !== null && (t.lowerIsBetter ? delta < 0 : delta > 0)
               return (
                 <li key={t.id}>
-                  <span>{t.icon} {t.name}</span>
-                  <span>
-                    <strong>{formatValue(t, trend.latest)}</strong>
-                    {delta !== null && delta !== 0 && (
-                      <span className={improved ? 'bench-up' : 'bench-down'}>
-                        {' '}{improved ? '▲' : '▼'} {formatValue(t, Math.abs(delta))}
-                      </span>
-                    )}
-                  </span>
+                  <button className="bench-row" onClick={() => onStartTest(t.id)} title={`Retest just ${t.name}, fresh`}>
+                    <span>{t.icon} {t.name}</span>
+                    <span>
+                      <strong>{formatValue(t, trend.latest)}</strong>
+                      {delta !== null && delta !== 0 && (
+                        <span className={improved ? 'bench-up' : 'bench-down'}>
+                          {' '}{improved ? '▲' : '▼'} {formatValue(t, Math.abs(delta))}
+                        </span>
+                      )}
+                      <span className="bench-retest">↻</span>
+                    </span>
+                  </button>
                 </li>
               )
             })}
           </ul>
         </>
       )}
-      <button className={due || benchmarks.length === 0 ? 'btn-primary' : 'btn-secondary'} onClick={onStartTest}>
-        {benchmarks.length === 0 ? '📋 Take the baseline test' : '📋 Retest'}
+      {benchmarks.length > 0 && (
+        <p className="muted bench-hint">
+          Tap a metric to retest it alone and fresh, or run the full battery — it keeps a fixed
+          order with built-in rests so sessions stay comparable.
+        </p>
+      )}
+      <button className={due || benchmarks.length === 0 ? 'btn-primary' : 'btn-secondary'} onClick={() => onStartTest()}>
+        {benchmarks.length === 0 ? '📋 Take the baseline test' : '📋 Full retest'}
       </button>
     </section>
   )

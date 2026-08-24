@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode } from 'react'
 import type { AppState, BenchmarkSession, ExerciseFlagReason, Feedback, FocusArea, JointArea, UserProfile, Workout, WorkoutFormat } from '../types'
-import { blendScore, estimateScore } from '../engine/benchmark'
+import { blendScore, estimateScore, sessionBlendWeight } from '../engine/benchmark'
 import { applySwap, generateWorkout, swapOptions } from '../engine/generator'
 import { applySession, decayForInactivity, isoDay } from '../engine/progression'
 
@@ -90,7 +90,7 @@ function reducer(state: AppState, action: Action): AppState {
       const estimate = estimateScore(action.session)
       const fitnessScore = estimate === null
         ? state.progression.fitnessScore
-        : blendScore(state.progression.fitnessScore, estimate)
+        : blendScore(state.progression.fitnessScore, estimate, sessionBlendWeight(action.session))
       return withFreshWorkout({
         ...state,
         benchmarks,
