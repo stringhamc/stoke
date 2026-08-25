@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { StoreProvider, useStore } from './state/store'
+import { Benchmark } from './screens/Benchmark'
 import { Onboarding } from './screens/Onboarding'
 import { Today } from './screens/Today'
 import { Player } from './screens/Player'
@@ -12,15 +13,20 @@ function Shell() {
   const { state } = useStore()
   const [tab, setTab] = useState<Tab>('today')
   const [playing, setPlaying] = useState(false)
+  // false = closed; null = full battery; string = a single test id
+  const [testing, setTesting] = useState<false | null | string>(false)
 
   if (!state.profile.onboarded) return <Onboarding />
   if (playing && state.todayWorkout) return <Player onExit={() => setPlaying(false)} />
+  if (testing !== false) {
+    return <Benchmark only={typeof testing === 'string' ? testing : undefined} onExit={() => setTesting(false)} />
+  }
 
   return (
     <div className="shell">
       <main className="content">
         {tab === 'today' && <Today onStart={() => setPlaying(true)} />}
-        {tab === 'history' && <History />}
+        {tab === 'history' && <History onStartTest={(testId) => setTesting(testId ?? null)} />}
         {tab === 'settings' && <Settings />}
       </main>
       <nav className="tabbar">

@@ -451,6 +451,119 @@ const BASE: Omit<Exercise, 'anim' | 'repStyle'>[] = [
     difficulty: 2, impact: 'low', jointLoad: [], equipment: ['none'],
   },
 
+  // ——— Gym: cardio machines ———
+  {
+    id: 'rowing_machine',
+    name: 'Rowing Machine',
+    description: 'Legs–body–arms on the drive, arms–body–legs on the recovery. Smooth, powerful strokes.',
+    kind: 'cardio', focusAreas: ['cardio', 'full_body'], muscles: ['lats', 'upper back', 'quads', 'glutes'],
+    difficulty: 2, impact: 'low', jointLoad: [], equipment: ['rower'],
+  },
+  {
+    id: 'treadmill_jog',
+    name: 'Treadmill Jog',
+    description: 'Easy conversational pace, tall posture, quick light steps.',
+    kind: 'cardio', focusAreas: ['cardio'], muscles: ['quads', 'hamstrings', 'calves'],
+    difficulty: 2, impact: 'moderate', jointLoad: ['knees', 'ankles'], equipment: ['treadmill'],
+  },
+  {
+    id: 'treadmill_sprints',
+    name: 'Treadmill Push Pace',
+    description: 'Hard but controlled pace — you can say a few words, not a sentence.',
+    kind: 'cardio', focusAreas: ['cardio'], muscles: ['quads', 'hamstrings', 'calves'],
+    difficulty: 4, impact: 'high', jointLoad: ['knees', 'ankles'], equipment: ['treadmill'],
+  },
+
+  // ——— Gym: TRX / suspension ———
+  {
+    id: 'trx_row',
+    name: 'TRX Rows',
+    description: 'Lean back holding the straps, body straight, pull chest to hands. Walk feet forward to make it harder.',
+    kind: 'strength', focusAreas: ['upper_body'], muscles: ['lats', 'biceps', 'upper back', 'core'],
+    difficulty: 3, impact: 'low', jointLoad: [], equipment: ['trx'],
+  },
+  {
+    id: 'trx_chest_press',
+    name: 'TRX Chest Press',
+    description: 'Face away from the anchor, lean into the straps, press back to standing.',
+    kind: 'strength', focusAreas: ['upper_body'], muscles: ['chest', 'triceps', 'shoulders', 'core'],
+    difficulty: 3, impact: 'low', jointLoad: ['shoulders'], equipment: ['trx'],
+  },
+  {
+    id: 'trx_squat',
+    name: 'TRX Squats',
+    description: 'Hold the straps for balance and sit deep. Great for grooving depth with a proud chest.',
+    kind: 'strength', focusAreas: ['lower_body'], muscles: ['quads', 'glutes'],
+    difficulty: 2, impact: 'low', jointLoad: ['knees'], equipment: ['trx'],
+  },
+  {
+    id: 'trx_pike',
+    name: 'TRX Pikes',
+    description: 'Feet in the straps in a plank, lift hips to a pike, lower with control.',
+    kind: 'core', focusAreas: ['core'], muscles: ['abs', 'deep core', 'shoulders'],
+    difficulty: 4, impact: 'low', jointLoad: ['wrists', 'shoulders'], equipment: ['trx'],
+  },
+
+  // ——— Gym: pull-up progression ———
+  {
+    id: 'dead_hang',
+    name: 'Dead Hang',
+    description: 'Hang from the bar with straight arms, shoulders active, and breathe. Grip is step one.',
+    kind: 'strength', focusAreas: ['upper_body'], muscles: ['grip', 'lats', 'shoulders'],
+    difficulty: 2, impact: 'low', jointLoad: ['shoulders'], equipment: ['pullup_bar'],
+  },
+  {
+    id: 'scapular_pulls',
+    name: 'Scapular Pulls',
+    description: 'From a dead hang, pull shoulder blades down and together without bending the elbows.',
+    kind: 'strength', focusAreas: ['upper_body'], muscles: ['lats', 'upper back', 'grip'],
+    difficulty: 3, impact: 'low', jointLoad: ['shoulders'], equipment: ['pullup_bar'],
+  },
+  {
+    id: 'assisted_pullups',
+    name: 'Assisted Pull-Ups',
+    description: 'On the assist machine (or with a band), pull chin over the bar with the least help you can manage.',
+    kind: 'strength', focusAreas: ['upper_body'], muscles: ['lats', 'biceps', 'upper back'],
+    difficulty: 3, impact: 'low', jointLoad: ['shoulders'], equipment: ['machines'],
+  },
+  {
+    id: 'negative_pullups',
+    name: 'Negative Pull-Ups',
+    description: 'Jump or step to chin-over-bar, then lower yourself as slowly as you can. The secret weapon.',
+    kind: 'strength', focusAreas: ['upper_body'], muscles: ['lats', 'biceps', 'upper back'],
+    difficulty: 4, impact: 'low', jointLoad: ['shoulders'], equipment: ['pullup_bar'],
+  },
+  {
+    id: 'pull_ups',
+    name: 'Pull-Ups',
+    description: 'Dead hang to chin over the bar, full control down. The goal move itself.',
+    kind: 'strength', focusAreas: ['upper_body'], muscles: ['lats', 'biceps', 'upper back', 'grip'],
+    difficulty: 5, impact: 'low', jointLoad: ['shoulders'], equipment: ['pullup_bar'],
+  },
+  {
+    id: 'lat_pulldown',
+    name: 'Lat Pulldown',
+    description: 'Pull the bar to your collarbone, elbows down and back, slow return.',
+    kind: 'strength', focusAreas: ['upper_body'], muscles: ['lats', 'biceps', 'upper back'],
+    difficulty: 3, impact: 'low', jointLoad: [], equipment: ['machines'],
+  },
+
+  // ——— Gym: machines ———
+  {
+    id: 'leg_press',
+    name: 'Leg Press',
+    description: 'Feet shoulder-width on the platform, lower under control, press without locking out.',
+    kind: 'strength', focusAreas: ['lower_body'], muscles: ['quads', 'glutes', 'hamstrings'],
+    difficulty: 2, impact: 'low', jointLoad: ['knees'], equipment: ['machines'],
+  },
+  {
+    id: 'seated_row_machine',
+    name: 'Seated Cable Row',
+    description: 'Chest tall, pull the handle to your ribs, squeeze the blades, slow return.',
+    kind: 'strength', focusAreas: ['upper_body'], muscles: ['lats', 'upper back', 'biceps'],
+    difficulty: 2, impact: 'low', jointLoad: [], equipment: ['machines'],
+  },
+
   // ——— Mobility / recovery ———
   {
     id: 'cat_cow',
@@ -570,6 +683,22 @@ const FORM: Record<string, [AnimId, RepStyle]> = {
   reverse_crunch: ['crunch', 'standard'],
   hollow_hold: ['legraise', 'standard'],
   superman: ['superman', 'standard'],
+  // gym
+  rowing_machine: ['row', 'standard'],
+  treadmill_jog: ['run', 'alternating'],
+  treadmill_sprints: ['run', 'alternating'],
+  trx_row: ['row', 'standard'],
+  trx_chest_press: ['pushup', 'standard'],
+  trx_squat: ['squat', 'standard'],
+  trx_pike: ['climber', 'standard'],
+  dead_hang: ['hang', 'standard'],
+  scapular_pulls: ['pullup', 'standard'],
+  assisted_pullups: ['pullup', 'standard'],
+  negative_pullups: ['pullup', 'standard'],
+  pull_ups: ['pullup', 'standard'],
+  lat_pulldown: ['pullup', 'standard'],
+  leg_press: ['squat', 'standard'],
+  seated_row_machine: ['row', 'standard'],
   // mobility
   cat_cow: ['catcow', 'standard'],
   worlds_greatest: ['lunge', 'alternating'],

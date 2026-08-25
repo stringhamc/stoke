@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { GoalPicker } from '../components/GoalPicker'
 import { FOCUS_LABELS, useStore } from '../state/store'
-import type { Equipment, FocusArea, UserProfile } from '../types'
+import type { Equipment, FocusArea, Goal, UserProfile } from '../types'
 
 const FOCUS_OPTIONS: FocusArea[] = ['full_body', 'upper_body', 'lower_body', 'core', 'cardio', 'mobility']
 
@@ -9,6 +10,14 @@ const EQUIPMENT_OPTIONS: { id: Equipment; label: string }[] = [
   { id: 'wall', label: 'Free wall space' },
   { id: 'dumbbells', label: 'Dumbbells' },
   { id: 'band', label: 'Resistance band' },
+]
+
+export const GYM_EQUIPMENT_OPTIONS: { id: Equipment; label: string }[] = [
+  { id: 'rower', label: 'Rowing machine' },
+  { id: 'treadmill', label: 'Treadmill' },
+  { id: 'trx', label: 'TRX / suspension straps' },
+  { id: 'pullup_bar', label: 'Pull-up bar' },
+  { id: 'machines', label: 'Weight machines' },
 ]
 
 const LEVELS = [
@@ -22,16 +31,20 @@ export function Onboarding() {
   const { dispatch } = useStore()
   const [step, setStep] = useState(0)
   const [name, setName] = useState('')
+  const [goals, setGoals] = useState<Goal[]>([])
   const [goalBalance, setGoalBalance] = useState(50)
   const [focusAreas, setFocusAreas] = useState<FocusArea[]>(['full_body'])
   const [days, setDays] = useState(3)
   const [equipment, setEquipment] = useState<Equipment[]>([])
+  const [gymEquipment, setGymEquipment] = useState<Equipment[]>([])
   const [level, setLevel] = useState(4)
 
   const toggleFocus = (f: FocusArea) =>
     setFocusAreas((prev) => (prev.includes(f) ? prev.filter((x) => x !== f) : [...prev, f]))
   const toggleEquipment = (q: Equipment) =>
     setEquipment((prev) => (prev.includes(q) ? prev.filter((x) => x !== q) : [...prev, q]))
+  const toggleGym = (q: Equipment) =>
+    setGymEquipment((prev) => (prev.includes(q) ? prev.filter((x) => x !== q) : [...prev, q]))
 
   const finish = () => {
     const profile: UserProfile = {
@@ -39,7 +52,9 @@ export function Onboarding() {
       goalBalance,
       focusAreas: focusAreas.length > 0 ? focusAreas : ['full_body'],
       targetDaysPerWeek: days,
+      goals,
       equipment,
+      gymEquipment,
       excluded: [],
       flags: [],
       soundEffects: true,
@@ -57,6 +72,12 @@ export function Onboarding() {
         <span>What should we call you?</span>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
       </label>
+    </section>,
+
+    <section key="goals" className="card">
+      <h2>What are you working toward?</h2>
+      <p>These steer every workout we build for you.</p>
+      <GoalPicker value={goals} onChange={setGoals} />
     </section>,
 
     <section key="goal" className="card">
@@ -115,11 +136,20 @@ export function Onboarding() {
     </section>,
 
     <section key="equipment" className="card">
-      <h2>What do you have handy?</h2>
+      <h2>What do you have at home?</h2>
       <p>Everything works with just your bodyweight — extras unlock more variety.</p>
       <div className="chip-grid">
         {EQUIPMENT_OPTIONS.map((q) => (
           <button key={q.id} className={`chip ${equipment.includes(q.id) ? 'chip-on' : ''}`} onClick={() => toggleEquipment(q.id)}>
+            {q.label}
+          </button>
+        ))}
+      </div>
+      <h2 style={{ marginTop: '1.5rem' }}>Do you also train at a gym?</h2>
+      <p>Pick what your gym has — then switch to Gym mode on workout days there and we’ll build around it.</p>
+      <div className="chip-grid">
+        {GYM_EQUIPMENT_OPTIONS.map((q) => (
+          <button key={q.id} className={`chip ${gymEquipment.includes(q.id) ? 'chip-on' : ''}`} onClick={() => toggleGym(q.id)}>
             {q.label}
           </button>
         ))}

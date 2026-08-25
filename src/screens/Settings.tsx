@@ -1,5 +1,7 @@
 import { AREA_LABELS } from '../components/FlagSheet'
+import { GoalPicker } from '../components/GoalPicker'
 import { getExercise } from '../data/exercises'
+import { GYM_EQUIPMENT_OPTIONS } from './Onboarding'
 import { FOCUS_LABELS, useStore } from '../state/store'
 import type { Equipment, FocusArea } from '../types'
 
@@ -27,6 +29,14 @@ export function Settings() {
   return (
     <div className="settings">
       <h1>Settings</h1>
+
+      <section className="card">
+        <h2>Training goals</h2>
+        <GoalPicker
+          value={p.goals}
+          onChange={(goals) => dispatch({ type: 'update_profile', patch: { goals } })}
+        />
+      </section>
 
       <section className="card">
         <h2>Goal</h2>
@@ -95,10 +105,31 @@ export function Settings() {
       </section>
 
       <section className="card">
-        <h2>Equipment</h2>
+        <h2>Home equipment</h2>
         <div className="chip-grid">
           {EQUIPMENT_OPTIONS.map((q) => (
             <button key={q.id} className={`chip ${p.equipment.includes(q.id) ? 'chip-on' : ''}`} onClick={() => toggleEquipment(q.id)}>
+              {q.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="card">
+        <h2>Gym equipment</h2>
+        <p className="muted">Used when you switch to Gym mode on the Today screen.</p>
+        <div className="chip-grid">
+          {GYM_EQUIPMENT_OPTIONS.map((q) => (
+            <button
+              key={q.id}
+              className={`chip ${p.gymEquipment.includes(q.id) ? 'chip-on' : ''}`}
+              onClick={() => {
+                const gymEquipment = p.gymEquipment.includes(q.id)
+                  ? p.gymEquipment.filter((x) => x !== q.id)
+                  : [...p.gymEquipment, q.id]
+                dispatch({ type: 'update_profile', patch: { gymEquipment } })
+              }}
+            >
               {q.label}
             </button>
           ))}

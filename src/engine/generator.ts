@@ -2,6 +2,7 @@ import { EXERCISES, getExercise } from '../data/exercises'
 import type {
   Exercise, FocusArea, Impact, JointArea, ProgressionState, UserProfile, Workout, WorkoutFormat, WorkoutItem,
 } from '../types'
+import { goalWeight, PULL_FAMILY } from './goals'
 import { adherenceRatio, clamp, isoDay, sessionsInLastDays } from './progression'
 import { trainingStatus } from './status'
 
@@ -121,6 +122,10 @@ export function pickFormat(profile: UserProfile, fitnessScore: number, focus: Fo
   } else {
     weighted = [['circuit', 3], ['tabata', 1.5], ['hiit', 2], ['pyramid', 1.5], ['amrap', 1.5]]
   }
+  // A get-leaner goal tilts toward the high-burn interval formats.
+  if (profile.goals.includes('leaner') && !cautious && !beginner) {
+    weighted = weighted.map(([f, w]) => [f, f === 'hiit' || f === 'tabata' ? w + 1 : w])
+  }
 
   const rng = mulberry32(hashString(isoDay(date) + '|fmt'))
   const total = weighted.reduce((s, [, w]) => s + w, 0)
@@ -186,8 +191,12 @@ const FOCUS_TITLES: Record<FocusArea, string> = {
   mobility: 'Mobility',
 }
 
-/** Stateful picker that avoids repeats and back-to-back muscle overlap. */
-function makePicker(rng: () => number) {
+/**
+ * Stateful picker that avoids repeats and back-to-back muscle overlap.
+ * Candidates are drawn weighted by the user's goals, so goal-relevant
+ * exercises show up proportionally more often.
+ */
+function makePicker(rng: () => number, weigh: (e: Exercise) => number = () => 1) {
   const picked: Exercise[] = []
   const pickOne = (candidates: Exercise[], avoidOverlapWith?: Exercise): Exercise | null => {
     const unused = candidates.filter((e) => !picked.includes(e))
@@ -195,7 +204,16 @@ function makePicker(rng: () => number) {
     const prev = avoidOverlapWith ?? picked[picked.length - 1]
     const nonAdjacent = prev ? unused.filter((e) => !e.muscles.some((m) => prev.muscles.includes(m))) : unused
     const from = nonAdjacent.length > 0 ? nonAdjacent : unused
-    const choice = from[Math.floor(rng() * from.length)]
+    const weights = from.map(weigh)
+    let roll = rng() * weights.reduce((s, w) => s + w, 0)
+    let choice = from[from.length - 1]
+    for (let i = 0; i < from.length; i++) {
+      roll -= weights[i]
+      if (roll <= 0) {
+        choice = from[i]
+        break
+      }
+    }
     picked.push(choice)
     return choice
   }
@@ -215,19 +233,42 @@ interface BuildContext {
   shape: Shape
   cautious: boolean
   score: number
+  goals: import('../types').Goal[]
   warmups: Exercise[]
   cooldowns: Exercise[]
   mains: Exercise[]
 }
 
+const ROWER_WARMUP_SECONDS = 90
+
+/**
+ * Warm-up slot: at the gym the rower takes it whenever it's available (a
+ * longer piece, the classic way to open a session); otherwise a mobility or
+ * low-impact cardio pick.
+ */
+function takeWarmup(ctx: BuildContext, picked: Exercise[], pickOne: (c: Exercise[]) => Exercise | null): { ex: Exercise; work: number } | null {
+  const rower = ctx.warmups.find((e) => e.id === 'rowing_machine')
+  if (rower) {
+    picked.push(rower)
+    return { ex: rower, work: ROWER_WARMUP_SECONDS }
+  }
+  const ex = pickOne(ctx.warmups)
+  return ex ? { ex, work: 0 } : null
+}
+
+function goalPicker(ctx: BuildContext) {
+  return makePicker(ctx.rng, (e) => goalWeight(e, ctx.goals))
+}
+
 function buildCircuit(ctx: BuildContext): { items: WorkoutItem[]; circuits: number } {
-  const { pickOne } = makePicker(ctx.rng)
+  const { picked, pickOne } = goalPicker(ctx)
   const items: WorkoutItem[] = []
   const slot = (e: Exercise | null, work: number, rest: number) => {
     if (e) items.push({ exerciseId: e.id, workSeconds: work, restSeconds: rest })
   }
 
-  slot(pickOne(ctx.warmups), ctx.shape.workSeconds, ctx.shape.restSeconds)
+  const warm = takeWarmup(ctx, picked, pickOne)
+  if (warm) slot(warm.ex, warm.work || ctx.shape.workSeconds, ctx.shape.restSeconds)
   const reserveCooldown = ctx.cautious ? 1 : 0
   const mainSlots = ctx.shape.slots - items.length - reserveCooldown
   for (let i = 0; i < mainSlots; i++) {
@@ -239,11 +280,11 @@ function buildCircuit(ctx: BuildContext): { items: WorkoutItem[]; circuits: numb
 }
 
 function buildTabata(ctx: BuildContext): { items: WorkoutItem[]; circuits: number } {
-  const { pickOne } = makePicker(ctx.rng)
+  const { picked, pickOne } = goalPicker(ctx)
   const items: WorkoutItem[] = []
 
-  const warmup = pickOne(ctx.warmups)
-  if (warmup) items.push({ exerciseId: warmup.id, workSeconds: 30, restSeconds: 10 })
+  const warm = takeWarmup(ctx, picked, pickOne)
+  if (warm) items.push({ exerciseId: warm.ex.id, workSeconds: warm.work || 30, restSeconds: 10 })
 
   // Each 4-minute block alternates two non-overlapping moves: A B A B A B A B.
   const blocks = ctx.score >= 7 ? 3 : 2
@@ -268,13 +309,13 @@ function buildTabata(ctx: BuildContext): { items: WorkoutItem[]; circuits: numbe
 }
 
 function buildHiit(ctx: BuildContext): { items: WorkoutItem[]; circuits: number } {
-  const { pickOne } = makePicker(ctx.rng)
+  const { picked, pickOne } = goalPicker(ctx)
   const items: WorkoutItem[] = []
   const work = ctx.score < 4 ? 30 : 40
   const rest = ctx.cautious ? 30 : 20
 
-  const warmup = pickOne(ctx.warmups)
-  if (warmup) items.push({ exerciseId: warmup.id, workSeconds: 30, restSeconds: rest })
+  const warm = takeWarmup(ctx, picked, pickOne)
+  if (warm) items.push({ exerciseId: warm.ex.id, workSeconds: warm.work || 30, restSeconds: rest })
 
   const slots = Math.max(4, Math.round(ctx.shape.slots * 0.6))
   for (let i = 0; i < slots; i++) {
@@ -289,14 +330,14 @@ function buildHiit(ctx: BuildContext): { items: WorkoutItem[]; circuits: number 
 }
 
 function buildPyramid(ctx: BuildContext): { items: WorkoutItem[]; circuits: number } {
-  const { pickOne } = makePicker(ctx.rng)
+  const { picked, pickOne } = goalPicker(ctx)
   const items: WorkoutItem[] = []
   const rest = ctx.cautious ? 20 : 15
   const base = Math.max(20, ctx.shape.workSeconds - 10)
   const peak = Math.min(50, ctx.shape.workSeconds + 15)
 
-  const warmup = pickOne(ctx.warmups)
-  if (warmup) items.push({ exerciseId: warmup.id, workSeconds: base, restSeconds: rest })
+  const warm = takeWarmup(ctx, picked, pickOne)
+  if (warm) items.push({ exerciseId: warm.ex.id, workSeconds: warm.work || base, restSeconds: rest })
 
   const reserveCooldown = ctx.cautious ? 1 : 0
   const n = Math.max(5, ctx.shape.slots - items.length - reserveCooldown)
@@ -324,7 +365,7 @@ function amrapReps(e: Exercise): number {
 }
 
 function buildAmrap(ctx: BuildContext): { items: WorkoutItem[]; circuits: number; totalSeconds: number } {
-  const { pickOne } = makePicker(ctx.rng)
+  const { pickOne } = goalPicker(ctx)
   const items: WorkoutItem[] = []
   const pool = ctx.mains.filter((e) => e.kind !== 'mobility')
   const count = ctx.score >= 6 ? 6 : ctx.score >= 3 ? 5 : 4
@@ -363,6 +404,7 @@ export function generateWorkout(
     shape,
     cautious: profile.goalBalance < 34,
     score: state.fitnessScore,
+    goals: profile.goals,
     warmups: pool.filter((e) => e.kind === 'mobility' || (e.kind === 'cardio' && e.impact === 'low')),
     cooldowns: pool.filter((e) => e.kind === 'mobility'),
     mains: pool.filter((e) => e.kind !== 'mobility'),
@@ -374,6 +416,10 @@ export function generateWorkout(
     : format === 'pyramid' ? buildPyramid(ctx)
     : format === 'amrap' ? buildAmrap(ctx)
     : buildCircuit(ctx)
+
+  // Pull-ups goal guarantee: every workout (except Tabata's paired blocks)
+  // includes at least one pulling exercise when the equipment allows.
+  if (format !== 'tabata') built.items = ensurePullExercise(built.items, ctx)
 
   const totalSeconds = built.totalSeconds
   const perCircuit = built.items.reduce((s, i) => s + i.workSeconds + i.restSeconds, 0)
@@ -392,6 +438,25 @@ export function generateWorkout(
     focus,
     estimatedMinutes,
   }
+}
+
+/**
+ * If the pull-ups goal is active and no pulling exercise made it in, swap a
+ * middle slot for one — progress needs the pattern trained every session.
+ */
+function ensurePullExercise(items: WorkoutItem[], ctx: BuildContext): WorkoutItem[] {
+  if (!ctx.goals.includes('pullups') || items.length < 3) return items
+  if (items.some((i) => PULL_FAMILY.has(i.exerciseId))) return items
+  const inWorkout = new Set(items.map((i) => i.exerciseId))
+  const candidates = ctx.mains.filter((e) => PULL_FAMILY.has(e.id) && !inWorkout.has(e.id))
+  if (candidates.length === 0) return items
+  const pick = candidates[Math.floor(ctx.rng() * candidates.length)]
+  const idx = Math.max(1, Math.floor(items.length / 2))
+  return items.map((it, i) =>
+    i === idx
+      ? { ...it, exerciseId: pick.id, targetReps: it.targetReps === undefined ? undefined : amrapReps(pick) }
+      : it,
+  )
 }
 
 /**

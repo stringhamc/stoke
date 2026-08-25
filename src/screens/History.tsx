@@ -1,8 +1,9 @@
+import { BENCH_TESTS, daysSinceTest, formatValue, RETEST_DAYS, testTrend } from '../engine/benchmark'
 import { adherenceRatio, currentStreakDays, sessionsInLastDays } from '../engine/progression'
 import { STATUS_INFO, trainingStatus } from '../engine/status'
 import { FOCUS_LABELS, useStore } from '../state/store'
 
-export function History() {
+export function History({ onStartTest }: { onStartTest: (testId?: string) => void }) {
   const { state } = useStore()
   const { sessions, fitnessScore } = state.progression
   const streak = currentStreakDays(sessions)
@@ -55,6 +56,8 @@ export function History() {
         </div>
       </div>
 
+      <BenchmarksCard onStartTest={onStartTest} />
+
       <section className="card">
         <h2>Last two weeks</h2>
         <p className="muted">
@@ -88,6 +91,65 @@ export function History() {
         </ul>
       </section>
     </div>
+  )
+}
+
+function BenchmarksCard({ onStartTest }: { onStartTest: (testId?: string) => void }) {
+  const { state } = useStore()
+  const benchmarks = state.benchmarks ?? []
+  const since = daysSinceTest(benchmarks)
+  const due = since !== null && since >= RETEST_DAYS
+
+  return (
+    <section className="card">
+      <h2>Benchmarks</h2>
+      {benchmarks.length === 0 ? (
+        <p className="muted">
+          Establish your baseline with a short fitness test — max push-ups, timed squats,
+          plank hold and more. Retest monthly to watch the numbers move.
+        </p>
+      ) : (
+        <>
+          <p className="muted">
+            Last tested {since === 0 ? 'today' : `${since} day${since === 1 ? '' : 's'} ago`}
+            {due ? ' — time to retest and see what changed 📈' : ''}
+          </p>
+          <ul className="bench-list">
+            {BENCH_TESTS.map((t) => {
+              const trend = testTrend(benchmarks, t.id)
+              if (!trend) return null
+              const delta = trend.previous !== undefined ? trend.latest - trend.previous : null
+              const improved = delta !== null && (t.lowerIsBetter ? delta < 0 : delta > 0)
+              return (
+                <li key={t.id}>
+                  <button className="bench-row" onClick={() => onStartTest(t.id)} title={`Retest just ${t.name}, fresh`}>
+                    <span>{t.icon} {t.name}</span>
+                    <span>
+                      <strong>{formatValue(t, trend.latest)}</strong>
+                      {delta !== null && delta !== 0 && (
+                        <span className={improved ? 'bench-up' : 'bench-down'}>
+                          {' '}{improved ? '▲' : '▼'} {formatValue(t, Math.abs(delta))}
+                        </span>
+                      )}
+                      <span className="bench-retest">↻</span>
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      )}
+      {benchmarks.length > 0 && (
+        <p className="muted bench-hint">
+          Tap a metric to retest it alone and fresh, or run the full battery — it keeps a fixed
+          order with built-in rests so sessions stay comparable.
+        </p>
+      )}
+      <button className={due || benchmarks.length === 0 ? 'btn-primary' : 'btn-secondary'} onClick={() => onStartTest()}>
+        {benchmarks.length === 0 ? '📋 Take the baseline test' : '📋 Full retest'}
+      </button>
+    </section>
   )
 }
 
