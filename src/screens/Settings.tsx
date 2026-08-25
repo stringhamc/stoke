@@ -185,6 +185,8 @@ export function Settings() {
         </section>
       )}
 
+      <p className="muted build-stamp">Stoke · build {typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__ : 'dev'}</p>
+
       <section className="card danger-zone">
         <h2>Reset</h2>
         <p className="muted">Erase your profile and history and start over.</p>

@@ -160,6 +160,7 @@ button { font: inherit; cursor: pointer; border: none; border-radius: 10px; colo
 .bench-row:hover strong { color: var(--accent); }
 .bench-retest { color: var(--muted); margin-left: 0.4rem; }
 .bench-hint { margin-bottom: 0.6rem; }
+.build-stamp { text-align: center; font-size: 0.72rem; opacity: 0.7; }
 
 /* ——— Workout browser ——— */
 .picker-sheet { gap: 0.6rem; }
